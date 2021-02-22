@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/static/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="/static/node_modules/socket.io/client-dist/socket.io.min.js"></script>
+</head>
+
+<body>
+    <h1>Test page</h1>
+    <input type="text" id="username" />
+    <button id="connectButton">Connect</button>
+<script>
+
+    $('#connectButton').on('click', () => {
+        const socket = io('http://localhost:5001', {transports:['websocket']}); 
+        socket.on('connect', () => {
+            console.log('Connection was established');
+            socket.emit('login',{login: $('#username').val()});
+        });
+    })
+
+</script>
+</body>
+
+</html>

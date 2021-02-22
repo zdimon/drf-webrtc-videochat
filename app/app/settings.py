@@ -55,7 +55,7 @@ ROOT_URLCONF = 'app.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR,'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -124,3 +124,7 @@ REDIS_HOST = os.getenv('SQL_HOST', 'webrtc-redis-server')
 REDIS_PORT = os.getenv('SQL_PORT', '6379')
 
 CELERY_BROKER_URL = 'redis://' + REDIS_HOST + ':' + str(REDIS_PORT)
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')
+]
