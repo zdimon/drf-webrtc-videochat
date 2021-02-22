@@ -6,10 +6,43 @@ services:
             - 8000:8000
         working_dir: /app
         container_name: webrtc-server
+        command: '/entry/entrypoint.sh'
         volumes:
             - ./app:/app
         ports:
             - 8181:8181
+        networks: 
+            - webrtc_network
+
+    webrtc-celery-worker:
+        build: .
+        working_dir: /app
+        command: celery -A app worker -l info
+        volumes:
+            - ./app:/app
+        depends_on:
+            - webrtc-redis-server
+        container_name: webrtc-celery-worker
+        networks: 
+            - webrtc_network
+
+    webrtc-socketio-server:
+        build: .
+        working_dir: /app
+        command: ./manage.py start_socket
+        volumes:
+            - ./app:/app
+        depends_on:
+            - webrtc-redis-server
+        container_name: webrtc-socketio-server
+        ports:
+            - 5001:5001
+        networks: 
+            - webrtc_network
+
+    webrtc-redis-server:
+        image: "redis:alpine"
+        container_name: webrtc-redis-server
         networks: 
             - webrtc_network
 
