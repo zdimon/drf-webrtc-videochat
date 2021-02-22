@@ -1,0 +1,19 @@
+version: '3.5'
+services: 
+    webrtc-django:
+        build: .
+        ports:
+            - 8000:8000
+        working_dir: /app
+        container_name: webrtc-server
+        volumes:
+            - ./app:/app
+        ports:
+            - 8181:8181
+        networks: 
+            - webrtc_network
+
+
+networks:
+    webrtc_network:
+        driver: bridge
