@@ -10,3 +10,13 @@ class UserProfile(models.Model):
 class UserConnection(models.Model):
     sid = models.CharField(max_length=250,unique=True, verbose_name=_('SID'))
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+
+class Sdp(models.Model):
+    sdp = models.TextField(verbose_name=_('Sdp'))
+    conn = models.ForeignKey(UserConnection, on_delete=models.CASCADE)
+
+
+class Ice(models.Model):
+    ice = models.TextField(verbose_name=_('Ice'))
+    sdp = models.ForeignKey(Sdp, on_delete=models.CASCADE)

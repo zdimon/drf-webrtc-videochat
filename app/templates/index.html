@@ -9,15 +9,85 @@
     <h1>Test page</h1>
     <input type="text" id="username" />
     <button id="connectButton">Connect</button>
+
+    <p>
+        <video autoplay="true" width="200" id="myVideo"></video>
+        <button id="getMedia">Get user media</button>
+        <button id="createOffer">Create offer</button>
+    </p>
 <script>
 
     $('#connectButton').on('click', () => {
         const socket = io('http://localhost:5001', {transports:['websocket']}); 
-        socket.on('connect', () => {
+        socket.on('connect', (msg) => {
             console.log('Connection was established');
+            window.sessionStorage.setItem('sid',socket.id);
             socket.emit('login',{login: $('#username').val()});
         });
+
+
+
     })
+
+    $('#getMedia').on('click', (e) => {
+        init(e);
+    })
+
+    $('#createOffer').on('click', (e) => {
+        offer(e);
+    })
+
+    const constraints = window.constraints = {
+    audio: false,
+    video: true
+    };
+
+    async function init(e) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            console.log(stream);
+            handleSuccess(stream);
+            //e.target.disabled = true;
+        } catch (e) {
+            //handleError(e);
+            console.log(e);
+        }
+    }
+
+    function handleSuccess(stream) {
+        const video = document.querySelector('#myVideo');
+        const videoTracks = stream.getVideoTracks();
+        console.log('Got stream with constraints:', constraints);
+        console.log(`Using video device: ${videoTracks[0].label}`);
+        window.stream = stream; // make variable available to browser console
+        video.srcObject = stream;
+    }
+
+    const offerOptions = {
+        offerToReceiveAudio: 0,
+        offerToReceiveVideo: 1,
+        iceRestart: 1,
+        voiceActivityDetection: 0
+    };
+
+    async function offer(e) {
+       const peerConnection = window.peerConnection = new RTCPeerConnection(null);
+       const offer = await peerConnection.createOffer(offerOptions);
+       console.log(offer);
+       let url = 'http://localhost:8181/offer';
+       $.ajax({
+        type: "POST",
+        url: url,
+        data: {
+            'sid': window.sessionStorage.getItem('sid'),
+            'offer': JSON.stringify(offer)
+        },
+            success: (data) => {
+                console.log(data);
+            },
+        });
+
+    }
 
 </script>
 </body>

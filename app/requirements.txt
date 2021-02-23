@@ -3,3 +3,6 @@ python-socketio
 eventlet
 redis
 celery
+djangorestframework
+drf-yasg
+django-braces

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, UserConnection
+from .models import UserProfile, UserConnection, Sdp, Ice
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -8,3 +8,13 @@ class UserProfileAdmin(admin.ModelAdmin):
 @admin.register(UserConnection)
 class UserConnectionAdmin(admin.ModelAdmin):
     list_display = ['user', 'sid']
+
+
+@admin.register(Sdp)
+class SdpAdmin(admin.ModelAdmin):
+    list_display = ['conn', 'sdp']
+
+
+@admin.register(Ice)
+class IceAdmin(admin.ModelAdmin):
+    list_display = ['sdp', 'ice']
