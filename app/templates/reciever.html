@@ -6,25 +6,59 @@
 </head>
 
 <body>
-    <h1>Test page</h1>
-    <input type="text" id="username" />
-    <button id="connectButton">Connect</button>
+    <h1>Test page ({{server_name}})</h1>
+    <div id="connectDiv">
+        <input value="man" type="text" id="username" />
+        <button id="connectButton">Connect</button>
+    </div>
 
     <p>
         <video autoplay="true" width="200" id="myVideo"></video>
         <button id="getMedia">Get user media</button>
         <button id="createOffer">Create offer</button>
     </p>
+
+    <div>
+        <input value="woman" type="text" id="CallUsername" />
+        <button id="callButton">Calling</button>
+    </div>
 <script>
 
+    $('#callButton').on('click', (e) => {
+        let url = '{{server_name}}/call';
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: JSON.stringify({
+                "login": $('#CallUsername').val(),
+                "sid": window.sessionStorage.getItem('sid')
+            }),
+            contentType: "application/json",
+            success: (data) => {
+                console.log(data);
+            },
+        });
+    });
+
+
     $('#connectButton').on('click', () => {
-        const socket = io('http://localhost:5001', {transports:['websocket']}); 
+        const socket = io('{{socket_url}}', {transports:['websocket']}); 
         socket.on('connect', (msg) => {
             console.log('Connection was established');
             window.sessionStorage.setItem('sid',socket.id);
             socket.emit('login',{login: $('#username').val()});
+            $('#connectDiv').hide();
         });
 
+        socket.on('calling', (msg) => {
+            console.log('Somebody calling you!!!!')
+            console.log(msg);
+        });
+
+        socket.on('sender_offer', (msg) => {
+            console.log('Request accepted!!!!')
+            console.log(msg);
+        });
 
 
     })
@@ -74,7 +108,7 @@
        const peerConnection = window.peerConnection = new RTCPeerConnection(null);
        const offer = await peerConnection.createOffer(offerOptions);
        console.log(offer);
-       let url = 'http://localhost:8181/offer';
+       let url = '{{server_name}}:{{server_port}}/offer';
        $.ajax({
         type: "POST",
         url: url,

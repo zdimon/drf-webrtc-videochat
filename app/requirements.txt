@@ -6,3 +6,4 @@ celery
 djangorestframework
 drf-yasg
 django-braces
+python-dotenv

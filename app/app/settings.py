@@ -25,7 +25,7 @@ SECRET_KEY = 'u+2adv@9#e*u&tt*fk@45gxf1*gbm4hl5692-ggjxrdvo^&_0z'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -123,11 +123,20 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-REDIS_HOST = os.getenv('SQL_HOST', 'webrtc-redis-server')
-REDIS_PORT = os.getenv('SQL_PORT', '6379')
+from dotenv import load_dotenv
+load_dotenv()
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'webrtc-redis-server')
+REDIS_PORT = os.getenv('REDIS_PORT', '6379')
+DOMAIN_NAME = os.getenv('DOMAIN_NAME', 'http://localhost')
+SOCKET_URL = os.getenv('SOCKET_URL', 'http://localhost:5001')
+SOCKET_PORT = os.getenv('SOCKET_PORT', '5001')
 
 CELERY_BROKER_URL = 'redis://' + REDIS_HOST + ':' + str(REDIS_PORT)
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
+
+
+

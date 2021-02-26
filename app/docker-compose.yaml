@@ -5,12 +5,10 @@ services:
         ports:
             - 8000:8000
         working_dir: /app
-        container_name: webrtc-server
+        container_name: webrtc-django
         command: '/entry/entrypoint.sh'
         volumes:
             - .:/app
-        ports:
-            - 8181:8181
         networks: 
             - webrtc_network
 
@@ -43,6 +41,23 @@ services:
     webrtc-redis-server:
         image: "redis:alpine"
         container_name: webrtc-redis-server
+        networks: 
+            - webrtc_network
+
+    webrtc-nginx-server:
+        build: 
+            context: .
+            dockerfile: Dockerfile.nginx
+            args:
+                - NGINX_PORT=80
+        container_name: webrtc-nginx-server
+        # restart: always
+        ports:
+            - 80:80
+        volumes:
+            - .:/app
+        depends_on:
+            - webrtc-django
         networks: 
             - webrtc_network
 

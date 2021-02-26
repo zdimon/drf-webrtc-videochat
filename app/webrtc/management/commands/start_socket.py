@@ -4,9 +4,11 @@ import eventlet
 import threading
 from webrtc.models import UserProfile, UserConnection
 from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
+
+mgr = socketio.RedisManager(f'redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/0')
 
 eventlet.monkey_patch()
-mgr = socketio.RedisManager('redis://localhost:6379/0')
 sio = socketio.Server(cors_allowed_origins='*',
                       async_mode='eventlet',
                       client_manager=mgr)
@@ -42,6 +44,7 @@ def remove_connection_task(sid):
 @sio.event
 def connect(sid, environ):
     print('connect ', sid)
+    #sio.emit('my event', {'data': 'foobar'})
 
 
 @sio.event
@@ -61,4 +64,4 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print('Statrting socket server')
-        eventlet.wsgi.server(eventlet.listen(('', 5001)), app)
+        eventlet.wsgi.server(eventlet.listen(('', int(settings.SOCKET_PORT))), app)

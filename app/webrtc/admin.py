@@ -12,7 +12,7 @@ class UserConnectionAdmin(admin.ModelAdmin):
 
 @admin.register(Sdp)
 class SdpAdmin(admin.ModelAdmin):
-    list_display = ['conn', 'sdp']
+    list_display = ['from_user', 'from_user_sdp','to_user', 'to_user_sdp']
 
 
 @admin.register(Ice)
