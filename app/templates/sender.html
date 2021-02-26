@@ -37,7 +37,18 @@
             $('#acceptDiv').show();
         });
 
+        socket.on('reciever_answer', (msg) => {
+             console.log('Answer from reciecer!');
+             setAnswer(msg);
+        });
+
     })
+
+    async function setAnswer(msg) {
+        await window.peerConnection.setRemoteDescription(
+            JSON.parse(msg.reciever_answer));
+        console.log(window.peerConnection);
+    }
 
     $('#acceptButton').on('click', accept);
     function accept(e) {
@@ -111,7 +122,8 @@
     async function offer(e) {
        const peerConnection = window.peerConnection = new RTCPeerConnection(null);
        const offer = await peerConnection.createOffer(offerOptions);
-       console.log(offer);
+       await peerConnection.setLocalDescription(offer);
+       console.log(window.peerConnection);
        let url = '{{server_name}}:{{server_port}}/offer';
        $.ajax({
         type: "POST",

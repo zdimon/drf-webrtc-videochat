@@ -58,6 +58,7 @@
         socket.on('sender_offer', (msg) => {
             console.log('Request accepted!!!!')
             console.log(msg);
+            offer(JSON.parse(msg.sender_offer));
         });
 
 
@@ -104,17 +105,24 @@
         voiceActivityDetection: 0
     };
 
-    async function offer(e) {
-       const peerConnection = window.peerConnection = new RTCPeerConnection(null);
-       const offer = await peerConnection.createOffer(offerOptions);
-       console.log(offer);
+    async function offer(sender_offer) {
+        const peerConnection = window.peerConnection = new RTCPeerConnection(null);
+        try {
+            await window.peerConnection.setRemoteDescription(sender_offer);
+        } catch (e) {
+            console.log(e);
+        }
+       
+       const answer = await window.peerConnection.createAnswer();
+
        let url = '{{server_name}}:{{server_port}}/offer';
        $.ajax({
         type: "POST",
         url: url,
         data: {
             'sid': window.sessionStorage.getItem('sid'),
-            'offer': JSON.stringify(offer)
+            'answer': JSON.stringify(answer),
+            'type': 'reciever'
         },
             success: (data) => {
                 console.log(data);

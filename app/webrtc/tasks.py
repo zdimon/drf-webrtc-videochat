@@ -22,3 +22,13 @@ def sender_offer_task(sender_id, reciever_id, sender_offer):
         payload = {"sender_login": sender.login,
                    "sender_offer": sender_offer}
         mgr.emit('sender_offer', data=payload, room=conn.sid)
+
+
+@task()
+def sender_answer_task(sender_id, reciever_answer):
+    sender = UserProfile.objects.get(pk=sender_id)
+    # Находим все соединения по принимающей стороне
+    for conn in UserConnection.objects.filter(user=sender):
+        # отсылаем сообщения на сокет
+        payload = {"reciever_answer": reciever_answer}
+        mgr.emit('reciever_answer', data=payload, room=conn.sid)

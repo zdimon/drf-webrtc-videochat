@@ -10,7 +10,7 @@ from .models import Sdp, UserConnection, UserProfile
 from django.conf import settings
 import json
 from django.core.exceptions import ObjectDoesNotExist
-from .tasks import call_task, sender_offer_task
+from .tasks import call_task, sender_offer_task, sender_answer_task
 
 
 
@@ -38,9 +38,22 @@ class OfferView(APIView):
     def post(self, request, format=None):
         payload = request.data
         conn = UserConnection.objects.get(sid=payload['sid'])
-        offer = Sdp()
+        # найдем существующее Sdp или создадим новое
+        if payload['type'] == 'sender':
+            try:
+                offer = Sdp.objects.get(from_user=conn.user)
+            except ObjectDoesNotExist:
+                offer = Sdp()
+        else:
+            # если запрашивает принимающий значит Offer уже должен быть 100%
+            try:
+                offer = Sdp.objects.get(to_user=conn.user)
+            except ObjectDoesNotExist:
+                Response({'status': 1, 'message': f'Sdp does not exist!'})
+
         # устанавливаем Offer для передающего и уведомляем принимающую сторону
         if payload['type'] == 'sender':
+            
             # найдем принимающего по переданному логину
             try:
                 reciever = UserProfile.objects.get(login=payload['reciever_login'])
@@ -55,7 +68,9 @@ class OfferView(APIView):
         # устанавливаем Offer для принимающего
         else:
             offer.to_user = conn.user
-            offer.to_user_sdp = payload['offer']
+            offer.to_user_sdp = payload['answer']
+            # уведомляем передающую сторону через задачу для celery
+            sender_answer_task(offer.from_user.id, payload['answer'])
         offer.save()
         return Response({'offer': 'ok'})
 
