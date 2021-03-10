@@ -6,14 +6,14 @@
 </head>
 
 <body>
-    <h1>Test page ({{server_name}})</h1>
+    <h1>Send video ({{server_name}})</h1>
     <div id="connectDiv">
         <input value="man" type="text" id="username" />
         <button id="connectButton">Connect</button>
     </div>
 
     <p>
-        <video autoplay="true" width="200" id="myVideo"></video>
+        <video style="border: 1px solid red" autoplay="true" width="200" id="myVideo"></video>
         <button id="getMedia">Get user media</button>
         <button id="createOffer">Create offer</button>
     </p>
@@ -58,11 +58,48 @@
         socket.on('sender_offer', (msg) => {
             console.log('Request accepted!!!!')
             console.log(msg);
-            offer(JSON.parse(msg.sender_offer));
+            answer(JSON.parse(msg.sender_offer));
+        });
+
+        socket.on('ice_candidate', (msg) => {
+            console.log('get Ice candidate...')
+            console.log(msg)
+            const ice = JSON.parse(msg.ice);
+            if (ice !== null) {
+                reciveIceCandidate(ice);
+            }
         });
 
 
     })
+
+    async function reciveIceCandidate(ice) { 
+            await window.peerConnection.addIceCandidate(ice);
+            console.log(window.peerConnection);
+    }
+
+    function onIceCandidate(e) {
+        console.log('Generating ICE candidates');
+        console.log(e);
+       let url = '{{server_name}}:{{server_port}}/ice';
+       $.ajax({
+        type: "POST",
+        url: url,
+        contentType: "application/json",
+        data: JSON.stringify({
+            'sid': window.sessionStorage.getItem('sid'),
+            'ice': JSON.stringify(e.candidate),
+        }),
+            success: (data) => {
+                console.log(data);
+            },
+        });
+    }
+
+    function gotRemoteStream(e) {
+        const video = document.querySelector('#myVideo');
+        video.srcObject = e.streams[0];
+    }
 
     $('#getMedia').on('click', (e) => {
         init(e);
@@ -105,15 +142,22 @@
         voiceActivityDetection: 0
     };
 
-    async function offer(sender_offer) {
+    async function answer(sender_offer) {
         const peerConnection = window.peerConnection = new RTCPeerConnection(null);
+        window.peerConnection.addEventListener('icecandidate', e => onIceCandidate(e));
+        window.peerConnection.addEventListener('track', gotRemoteStream);
+
+
         try {
             await window.peerConnection.setRemoteDescription(sender_offer);
         } catch (e) {
             console.log(e);
         }
        
-       const answer = await window.peerConnection.createAnswer();
+
+        const answer = await window.peerConnection.createAnswer();
+        await window.peerConnection.setLocalDescription(answer);
+      
 
        let url = '{{server_name}}:{{server_port}}/offer';
        $.ajax({

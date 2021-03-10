@@ -1,3 +1,2 @@
 . ./venv/bin/activate
-cd app
 celery -A app worker -l info

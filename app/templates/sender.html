@@ -6,7 +6,7 @@
 </head>
 
 <body>
-    <h1>Accepting call ({{server_name}})</h1>
+    <h1>Accept video ({{server_name}})</h1>
 
     <div id="acceptDiv" style="display: none">
         Reciever login:<input type="text" id="calleeName" />
@@ -42,7 +42,21 @@
              setAnswer(msg);
         });
 
+        socket.on('ice_candidate', (msg) => {
+            console.log('get Ice candidate...')
+            const ice = JSON.parse(msg.ice);
+            if (ice !== null) {
+                reciveIceCandidate(ice);
+            }
+        });
+
     })
+
+
+    async function reciveIceCandidate(ice) { 
+            await window.peerConnection.addIceCandidate(ice);
+            console.log(window.peerConnection);
+    }
 
     async function setAnswer(msg) {
         await window.peerConnection.setRemoteDescription(
@@ -109,7 +123,7 @@
         console.log(`Using video device: ${videoTracks[0].label}`);
         window.stream = stream; // make variable available to browser console
         video.srcObject = stream;
-        offer();
+        offer(videoTracks, stream);
     }
 
     const offerOptions = {
@@ -119,8 +133,29 @@
         voiceActivityDetection: 0
     };
 
-    async function offer(e) {
+    function onIceCandidate(e) {
+        console.log(e);
+       let url = '{{server_name}}:{{server_port}}/ice';
+       $.ajax({
+        type: "POST",
+        url: url,
+        contentType: "application/json",
+        data: JSON.stringify({
+            'sid': window.sessionStorage.getItem('sid'),
+            'ice': JSON.stringify(e.candidate),
+        }),
+            success: (data) => {
+                console.log(data);
+            },
+        });
+    }
+
+    async function offer(tracks,localStream) {
        const peerConnection = window.peerConnection = new RTCPeerConnection(null);
+      tracks.forEach(track => window.peerConnection.addTrack(track, localStream));
+      //console.log(localStream.getTracks());
+
+       window.peerConnection.addEventListener('icecandidate', e => onIceCandidate(e));
        const offer = await peerConnection.createOffer(offerOptions);
        await peerConnection.setLocalDescription(offer);
        console.log(window.peerConnection);

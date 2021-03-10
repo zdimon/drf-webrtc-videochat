@@ -6,12 +6,12 @@ from drf_yasg.utils import swagger_auto_schema
 from .serializers.offer_request import OfferRequestSerializer
 from .serializers.call_request import CallRequestSerializer
 from .serializers.call_request import AcceptDeclineRequestSerializer
+from .serializers.ice_request import IceRequestSerializer
 from .models import Sdp, UserConnection, UserProfile
 from django.conf import settings
 import json
 from django.core.exceptions import ObjectDoesNotExist
-from .tasks import call_task, sender_offer_task, sender_answer_task
-
+from .tasks import call_task, sender_offer_task, sender_answer_task, send_ice_task
 
 
 def index(request):
@@ -75,9 +75,6 @@ class OfferView(APIView):
         return Response({'offer': 'ok'})
 
 
-@swagger_auto_schema(
-    request_body=CallRequestSerializer
-)
 class CallView(APIView):
     """
        Call request.
@@ -107,9 +104,7 @@ class CallView(APIView):
         return Response({'call': 'ok'})
 
 
-@swagger_auto_schema(
-    request_body=CallRequestSerializer
-)
+
 class AcceptView(APIView):
     """
        Accept a call.
@@ -125,9 +120,7 @@ class AcceptView(APIView):
         return Response({'call': 'ok'})
 
 
-@swagger_auto_schema(
-    request_body=AcceptDeclineRequestSerializer
-)
+
 class DeclineView(APIView):
     """
        Decline a call.
@@ -141,3 +134,38 @@ class DeclineView(APIView):
     def post(self, request, format=None):
         data = json.loads(request.body)
         return Response({'call': 'ok'})
+
+
+class IceView(APIView):
+    """
+       Get ice candidates.
+
+    """
+    permission_classes = (AllowAny,)
+
+    @swagger_auto_schema(
+        request_body=IceRequestSerializer
+    )
+    def post(self, request, format=None):
+        payload = request.data
+        # поищем соединение
+        try:
+            conn = UserConnection.objects.get(sid=payload['sid'])
+        except ObjectDoesNotExist:
+            return Response({'status': 1, 'message': 'Connection does not exist!'})
+
+        # поищем SDP для передающей стороны
+        try:
+            sdp = Sdp.objects.get(from_user=conn.user)
+            send_ice_task(sdp.to_user.id, payload['ice'])
+        except ObjectDoesNotExist:
+            print('Sdp for sender not found')
+
+        # поищем SDP для принимающей стороны
+        try:
+            sdp = Sdp.objects.get(to_user=conn.user)
+            send_ice_task(sdp.from_user.id, payload['ice'])
+        except ObjectDoesNotExist:
+            print('Sdp for reciever not found')
+
+        return Response({'ice': payload})

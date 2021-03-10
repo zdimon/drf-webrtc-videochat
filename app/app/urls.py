@@ -4,7 +4,7 @@ from webrtc.views import index, accept
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from webrtc.views import OfferView, CallView, AcceptView, DeclineView
+from webrtc.views import OfferView, CallView, AcceptView, DeclineView, IceView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -25,6 +25,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('offer', OfferView.as_view()),
+    path('ice', IceView.as_view()),
     path('call', CallView.as_view()),
     path('accept', AcceptView.as_view()),
     path('decline', DeclineView.as_view()),

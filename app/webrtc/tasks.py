@@ -32,3 +32,12 @@ def sender_answer_task(sender_id, reciever_answer):
         # отсылаем сообщения на сокет
         payload = {"reciever_answer": reciever_answer}
         mgr.emit('reciever_answer', data=payload, room=conn.sid)
+
+@task()
+def send_ice_task(user_id, ice):
+    sender = UserProfile.objects.get(pk=user_id)
+    # Находим все соединения цели
+    for conn in UserConnection.objects.filter(user=sender):
+        # отсылаем сообщения на сокет
+        payload = {"ice": ice}
+        mgr.emit('ice_candidate', data=payload, room=conn.sid)
